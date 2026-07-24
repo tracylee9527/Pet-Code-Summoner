@@ -1490,6 +1490,20 @@
     spawnBurst(x, y);
   }
 
+  // Pets should always be alert once sent into a fight - if one happened
+  // to be napping at a bed or snacking at a stand right beforehand, snap
+  // it awake immediately instead of leaving it stuck showing closed eyes
+  // and a zzz icon for the whole battle.
+  function wakePetForBattle(c){
+    c.sleeping = false;
+    c.sleepUntil = 0;
+    c.headingToBed = null;
+    c.snacking = false;
+    c.snackUntil = 0;
+    c.snackKind = null;
+    c.headingToStand = null;
+  }
+
   function pickNewWanderTarget(c){
     // Every so often, head to a pet bed for a nap instead of wandering.
     const roomBeds = petBeds.filter(b => (b.room||'main') === (c.room||'main'));
@@ -1847,6 +1861,7 @@
         c.inFight = true;
         c.pairedEnemy = null;
         c.pounceUntil = 0;
+        wakePetForBattle(c);
         showToast(c.def.name + ' jumps in!', 'good');
         battle.round++;
         startRound();
@@ -2216,6 +2231,7 @@
       c.aliveInBattle = true;
       c.pairedEnemy = null;
       c.pounceUntil = 0;
+      if (c.inFight) wakePetForBattle(c);
     });
 
     waveQueue = buildWaveQueue(lvl, options);
