@@ -1394,8 +1394,9 @@
   }
 
   /* ------------------------------------------------------------------
-   * Level-5+ pets occasionally tend to a hurt squadmate instead of
-   * attacking on their turn - a small, automatic, chance-based heal.
+   * Level-5+ pets occasionally tend to a hurt squadmate before acting -
+   * a small, automatic, chance-based heal. It's a free action and
+   * doesn't use up their turn, so they still get to attack right after.
    * ---------------------------------------------------------------- */
   const HEAL_UNLOCK_LEVEL = 5;
   const HEAL_CHANCE = 0.3;
@@ -2384,8 +2385,9 @@
     }
     spawnHearts(fighterX(target), fighterY(target) - 20);
     showToast(petDisplayName(healer) + ' tends to ' + (target === player ? 'you' : petDisplayName(target)) + '! +' + HEAL_AMOUNT + ' HP', 'good');
-    battle.queueIndex++;
-    advanceTurn();
+    // Healing is a free action - it doesn't use up the healer's turn, so
+    // they still get to attack normally right after.
+    battle.phase = 'awaiting-action';
   }
 
   function performPlayerAttack(){
