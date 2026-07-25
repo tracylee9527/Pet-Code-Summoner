@@ -1479,6 +1479,7 @@
       happiness: 0,
       sleeping: false,
       headingToBed: null,
+      bedInUse: null,
       sleepUntil: 0,
       snacking: false,
       headingToStand: null,
@@ -1498,6 +1499,7 @@
     c.sleeping = false;
     c.sleepUntil = 0;
     c.headingToBed = null;
+    c.bedInUse = null;
     c.snacking = false;
     c.snackUntil = 0;
     c.snackKind = null;
@@ -1506,9 +1508,14 @@
 
   function pickNewWanderTarget(c){
     // Every so often, head to a pet bed for a nap instead of wandering.
+    // Only beds that aren't already claimed (another pet heading there or
+    // already napping on it) count, so at most one pet uses a bed at once.
     const roomBeds = petBeds.filter(b => (b.room||'main') === (c.room||'main'));
-    if (gameState === 'hub' && roomBeds.length && Math.random() < 0.18){
-      const bed = roomBeds[Math.floor(Math.random()*roomBeds.length)];
+    const freeBeds = roomBeds.filter(b => !activeCats.some(o =>
+      o !== c && (o.headingToBed === b || o.bedInUse === b)
+    ));
+    if (gameState === 'hub' && freeBeds.length && Math.random() < 0.18){
+      const bed = freeBeds[Math.floor(Math.random()*freeBeds.length)];
       c.headingToBed = bed;
       c.headingToStand = null;
       c.targetX = bed.x;
@@ -1548,6 +1555,7 @@
         c.bobPhase += 0.02;
         if (now >= c.sleepUntil){
           c.sleeping = false;
+          c.bedInUse = null;
           pickNewWanderTarget(c);
         }
         return;
@@ -1572,6 +1580,7 @@
         c.flip = dx < 0;
       } else if (c.headingToBed){
         c.sleeping = true;
+        c.bedInUse = c.headingToBed;
         c.sleepUntil = now + 3500 + Math.random()*3000;
         c.headingToBed = null;
       } else if (c.headingToStand){
